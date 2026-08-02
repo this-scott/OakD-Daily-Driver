@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.20)
 set(TARGET_NAME OakDWebcam)
 project(${TARGET_NAME})
 
+# Generate 'compile_commands.json' for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Depthai dependency
 find_package(depthai REQUIRED)
 message(STATUS "Found depthai: ${depthai_DIR}")
@@ -14,6 +17,7 @@ find_package(OpenCV REQUIRED)
 # Add source files
 add_executable("${TARGET_NAME}"
     src/main.cpp
+    src/dai_controller.cpp
 )
 
 # Link with libraries

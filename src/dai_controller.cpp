@@ -17,6 +17,7 @@ dai::Pipeline create_pipe() {
   // Create pipeline
   dai::Pipeline pipeline(device);
   
+  //TODO: Need to figure out which part we want to send to main and v4l2. Like split into a create camera function and play stream function
   return pipeline;
   /*
   // Create nodes

@@ -12,7 +12,8 @@ cmake --build build --parallel 4 //build build path, use 4 files at a time
 
 Aug 2: The current plan is to create a device which wraps depthai controls and interacts with [v4l2](https://www.kernel.org/doc/html/v4.9/media/kapi/v4l2-dev.html)
 
-need to learn how to communicate with udev
+Aug 9(decided on the 2nd but never documented): Abandoning the udev/v4l2 kernal approach in favor of a loopback device which I can pump video into
+- Kernal userspace video driver needs more documentation
 
-udev appending rules:
-[] Find consistent flag to trigger process with
+[] Create loopback device as /dev/videoX in [loopback controller](src/v4l2_controller.cpp)
+[] Pipe video into it via the [depthai controller](src/dai_controller.cpp)

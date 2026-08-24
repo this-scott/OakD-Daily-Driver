@@ -1,6 +1,6 @@
 #ifndef DAI_CONTROLLER_H
 #define DAI_CONTROLLER_H
 
-dai::Pipeline create_pipe();
+int dai_run(const char *path);
 
 #endif

@@ -17,7 +17,6 @@ Aug 9(decided on the 2nd but never documented): Abandoning the v4l2 kernal/users
 
 [v4l2loopback](https://github.com/v4l2loopback/v4l2loopback) device creation components
 
-[] 
 [] ~Create loopback device as /dev/videoX in [loopback controller](src/v4l2_controller.cpp)~ (Replaced by modprobe startup config)
 [] Pipe video into it via the [depthai controller](src/dai_controller.cpp)
 [] Create a build script for 1 time setup

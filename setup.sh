@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -euo pipefail
 
 
-APP_NAME="OakD-Daily"
-BRIDGE_BIN="Oak-Bridge"
+APP_NAME="Oak-D-Webcam"
+BRIDGE_BIN="Oak-D-Bridge"
 PREFIX="/usr/local/"
 BUILD_DIR="build"
 
@@ -31,17 +31,30 @@ options v4l2loopback devices=0 exclusive_caps=1
 EOF
 sudo modprobe v4l2loopback
 
+echo "==> Creating start loopback device and bridge script"
+sudo tee ${PREFIX}/bin/start_bridge.sh >/dev/null <<EOF
+#!/bin/sh
 
+# check existing udev devices
+video_devices=$(find /dev -maxdepth 1 -name 'video*' 2>/dev/null | wc -l)
+
+# add loopback camera
+/usr/bin/v4l2loopback-ctl add -n "Oak-D Camera" /dev/video$video_devices
+
+# start bridge device
+${PREFIX}/bin/${BRIDGE_BIN}
+EOF
+
+# OPTING TO HANDLE LOOPBACK DEVICE CLEANUP INSIDE THE BRIDGE SCRIPT ON SHUTDOWN
+ 
 echo "==> Installing systemd service"
 sudo tee /etc/systemd/system/${APP_NAME}.service >/dev/null <<EOF
 [Unit]
 Description=MyriadX virtual camera bridge
 
 [Service]
-Type=simple #TODO: Wrap ExecStart into a bootscript
-ExecStartPre=/usr/bin/v4l2loopback-ctl add -n "MyriadX Cam" /dev/video10
-ExecStart=${PREFIX}/bin/${BRIDGE_BIN}
-ExecStopPost=/usr/bin/v4l2loopback-ctl delete /dev/video10
+Type=simple 
+ExecStart=${PREFIX}/bin/start_bridge.sh
 EOF
 
 
@@ -51,20 +64,20 @@ cmake --build "$BUILD_DIR" --parallel
 
 
 echo "==> Installing hotplug dispatch script"
-sudo tee /usr/local/bin/myriadx-cam-hotplug.sh >/dev/null <<'EOF'
-#!/usr/bin/env bash
+sudo tee /usr/local/bin/oak-d-cam-hotplug.sh >/dev/null <<EOF
+#!/bin/sh
 case "$1" in
-    add)    systemctl --no-block start myriadx-cam.service ;;
-    remove) systemctl --no-block stop  myriadx-cam.service ;;
+    add)    systemctl --no-block start ${APP_NAME}.service ;;
+    remove) systemctl --no-block stop ${APP_NAME}.service ;;
 esac
 EOF
-sudo chmod +x /usr/local/bin/myriadx-cam-hotplug.sh
+sudo chmod +x /usr/local/bin/oak-d-cam-hotplug.sh
 
 
 echo "==> Installing udev rule"
-sudo tee /etc/udev/rules.d/99-${APP_NAME}.rules >/dev/null <<'EOF'
-ACTION=="add",    SUBSYSTEM=="usb", ATTR{idVendor}=="03e7", ATTR{idProduct}=="2485", RUN+="/usr/local/bin/myriadx-cam-hotplug.sh add"
-ACTION=="remove", SUBSYSTEM=="usb", ATTR{idVendor}=="03e7", ATTR{idProduct}=="2485", RUN+="/usr/local/bin/myriadx-cam-hotplug.sh remove"
+sudo tee /etc/udev/rules.d/99-${APP_NAME}.rules >/dev/null <<EOF
+ACTION=="add",    SUBSYSTEM=="usb", ATTR{idVendor}=="03e7", ATTR{idProduct}=="2485", RUN+="/usr/local/bin/oak-d-cam-hotplug.sh add"
+ACTION=="remove", SUBSYSTEM=="usb", ATTR{idVendor}=="03e7", ATTR{idProduct}=="2485", RUN+="/usr/local/bin/oak-d-cam-hotplug.sh remove"
 EOF
 
 echo "==> Reloading udev and systemd"
@@ -72,4 +85,4 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger
 sudo systemctl daemon-reload
 
-echo "==> Done. Plug in the Myriad X — /dev/video10 should appear automatically."
+echo "==> Done. Plug in the oak-d. Device should appear automaticlly"

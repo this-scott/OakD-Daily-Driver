@@ -1,52 +1,33 @@
-#include <iostream>
 #include <memory>
 #include <opencv2/opencv.hpp>
-#include <exception>
 
 #include <depthai/depthai.hpp>
-#include "dai_controller.hpp"
-/* 
-ironically this is exactly what I need for the core functionality
-I just need to make it talk to Linux
-*/
-dai::Pipeline create_pipe() {
 
-  // Create device
+//keeping this extremely simple. Get the camera image, pump it to the stream.
+int dai_run(const char *path) {
+  // Create camera device
+  // Shared ptr automatically destroys itself when it has no more references. In this case when the function ends
   std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>();
 
-  // Create pipeline
+  // Create Pipeline
   dai::Pipeline pipeline(device);
-  
-  //TODO: Need to figure out which part we want to send to main and v4l2. Like split into a create camera function and play stream function
-  return pipeline;
-  /*
-  // Create nodes
-  auto cam = pipeline.create<dai::node::Camera>()->build();:"
 
-  auto videoQueue =
-      cam->requestOutput(std::make_pair(1260, 720))->createOutputQueue();
+  //Create camera node
+  auto cam = pipeline.create<dai::node::Camera>() -> build(dai::CameraBoardSocket::CAM_A);
+  auto videoQueue = cam->requestOutput({1920,1080}, dai::ImgFrame::Type::BGR888p, dai::ImgResizeMode::STRETCH,30)->createOutputQueue();
 
-  // Start pipeline
   pipeline.start();
-  
-  }
-  catch (const std::exception& e) {
-    std::count << "Exception Occurred: " <<  e.what() << std::endl;
-  }
-  
+
   while (true) {
-    auto videoIn = videoQueue->get<dai::ImgFrame>();
+    auto videoIn=videoQueue->get<dai::ImgFrame>();
     if (videoIn == nullptr)
       continue;
 
-    cv::imshow("video", videoIn->getCvFrame());
+    cv::imshow("vid", videoIn->getCvFrame());
 
-    if (cv::waitKey(1) == 'q') {
+    if (cv::waitKey(1)=='q'){
       break;
     }
   }
-
-  // returning video object of what was created
-  return videoQueue;
-  */
+  return 0;
 }

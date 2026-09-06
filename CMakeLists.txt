@@ -17,7 +17,6 @@ find_package(OpenCV REQUIRED)
 # Add source files
 add_executable("${TARGET_NAME}"
     src/main.cpp
-    src/dai_controller.cpp
 )
 
 # Link with libraries
@@ -48,4 +47,11 @@ if(WIN32)
             COMMAND_EXPAND_LISTS
         )
     endif()
+endif()
+
+# Allow testing
+enable_testing()
+option(BUILD_TESTING "Build the testing suite" ON)
+if (BUILD_TESTING)
+    add_subdirectory(tests)
 endif()

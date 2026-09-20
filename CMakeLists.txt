@@ -12,18 +12,22 @@ find_package(depthai REQUIRED)
 message(STATUS "Found depthai: ${depthai_DIR}")
 
 # Dependencies (optional, only used for example)
-find_package(OpenCV REQUIRED)
+# find_package(OpenCV REQUIRED)
 
 # Add source files
 add_executable("${TARGET_NAME}"
     src/main.cpp
 )
 
+# Add src as subdir since it has it's own package
+add_subdirectory(src)
+
 # Link with libraries
 target_link_libraries(${TARGET_NAME}
     PUBLIC
         depthai::core
-        ${OpenCV_LIBS} # optional, used for example
+    PRIVATE
+        oakd_webcam
 )
 
 # Set some errors

@@ -40,6 +40,7 @@ video_devices=$(find /dev -maxdepth 1 -name 'video*' 2>/dev/null | wc -l)
 
 # add loopback camera
 /usr/bin/v4l2loopback-ctl add -n "Oak-D Camera" /dev/video$video_devices
+/usr/bin/v4l2loopback-ctl set-caps 'YUYV:1920X1080@30' /dev/video$video_devices
 
 # start bridge device
 ${PREFIX}/bin/${BRIDGE_BIN}

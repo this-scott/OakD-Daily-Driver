@@ -1,7 +1,9 @@
 #include <memory>
-// #include <opencv2/opencv.hpp> ~ included from example
-#include <fstream>
 #include <depthai/depthai.hpp>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/videodev2.h> //v4l2 format commands
 
 //keeping this extremely simple. Get the camera image, pump it to the stream.
 int dai_run(const char *path) {
@@ -20,8 +22,16 @@ int dai_run(const char *path) {
 
   pipeline.start();
   
-  // Create the output stream object
-  std::ofstream outfile(path, std::ios::binary);
+  // Create the file (descriptor) object
+  int fd = open(path, O_RDWR);
+  // setting image format
+  v4l2_format fmt{};
+  fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+  fmt.fmt.pix.width = 1920;
+  fmt.fmt.pix.height = 1080;
+  fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
+  fmt.fmt.pix.sizeimage = 1920*1080*3/2;
+  ioctl(fd, VIDIOC_S_FMT, &fmt);
 
   while (true) {
     //get image frame
@@ -33,15 +43,9 @@ int dai_run(const char *path) {
     auto data = videoIn->getData();
 
     std::cout << "printing frame\n";
-
-    //reinterpret cast converts data into a char* for the yuv420p stream
-    outfile.write(reinterpret_cast<const char*>(data.data()), data.size());
-    // commenting these to say what existed. TODO: Safe exit function
-//    cv::imshow("vid", videoIn->getCvFrame());
-
-//    if (cv::waitKey(1)=='q'){
-//      break;
-//    }
+    
+    //writing buffer to stream
+    write(fd, data.data(), 1920*1080*3/2);
   }
   return 0;
 }

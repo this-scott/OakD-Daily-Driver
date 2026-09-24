@@ -42,8 +42,6 @@ int dai_run(const char *path) {
     //auto is creating a copy of the object
     auto data = videoIn->getData();
 
-    std::cout << "printing frame\n";
-    
     //writing buffer to stream
     write(fd, data.data(), 1920*1080*3/2);
   }

@@ -10,18 +10,20 @@ cmake -Bbuild -S. -DCMAKE_PREFIX_PATH=/path/to/install/dir //create Build files 
 cmake --build build --parallel 4 //build build path, use 4 files at a time
 ```
 
-Aug 2: The current plan is to create a device which wraps depthai controls and interacts with [v4l2](https://www.kernel.org/doc/html/v4.9/media/kapi/v4l2-dev.html)
+Create direct device command
+modprobe v4l2loopback video_nr=<N> card_label="Oak-D Camera" width=1920 height=1080 exclusive_caps=1
 
-Aug 9(decided on the 2nd but never documented): Abandoning the v4l2 kernal/userspace approach in favor of a loopback device which I can pump video into
-- Kernal userspace video driver needs more documentation
+## Current Program Flow (specify item titles)
+1. Setup script
+    1. Installs v4l2loopback
+    2. Creates and applies a global modprobe rule
+    3. Writes a script write will start the loopback device and code
+    4. Creates a service that executes the script
+    5. Creates a script that starts the service
+    6. Attaches this to a udev rule which triggers when the oakd camera is detected
 
-[v4l2loopback](https://github.com/v4l2loopback/v4l2loopback) device creation components
+## This may conflict with existing v4l2loopback setups. 
+- This program applies a module level setting, exclusive_caps=1 which is common for web programs like Chrome and Discord to recognize it as a webcam device. If your current setup uses v4l2loopback ensure that it doesn't require this parameter set to something else.
 
-[] ~Create loopback device as /dev/videoX in [loopback controller](src/v4l2_controller.cpp)~ (Replaced by modprobe startup config)
-[x] Pipe video into it via the [depthai controller](src/dai_controller.cpp)
-[x] Create a build script for 1 time setup
-
-Test run command
-modprobe v4l2loopback video_nr=<N> card_label="Oak-D Camera" width=1920 height=1080
-
-Currently using ofstream to stream bytes but that can't set the file type. Abandoning ofstream in favor of `open(path, O_RDWR)` so I can set the stream data type and figure out how to send a stream through this
+Problem: Plugging in the device will start the script, automatically starting the camera. Need to set it up to either start the camera pipeline or start the script when an app (discord, chrome, etc...) calls the camera
+**Solution: We're moving to pipewire**
